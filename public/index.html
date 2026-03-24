@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATM10 공식 가이드: 대규모 자동화 및 트러블슈팅</title>
+    <style>
+        :root {
+            --bg-main: #121212;
+            --bg-card: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent-primary: #00acc1; /* ATM Quest Book Blue */
+            --accent-secondary: #f4b400;
+            --border-color: #333333;
+            --mod-title-color: #ffffff;
+            --code-bg: #000000;
+            --code-text: #a5d6ff;
+        }
+
+        html[data-theme='light'] {
+            --bg-main: #f5f5f5;
+            --bg-card: #ffffff;
+            --text-main: #212121;
+            --text-muted: #666666;
+            --accent-primary: #00838f;
+            --accent-secondary: #ffab00;
+            --border-color: #e0e0e0;
+            --mod-title-color: #000000;
+            --code-bg: #eeeeee;
+            --code-text: #0d47a1;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .theme-switch-wrapper {
+            position: absolute;
+            top: -20px;
+            right: 0;
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+        .theme-switch input {
+            display:none;
+        }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent-primary);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            color: var(--text-main);
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin: 0;
+        }
+        .chapter {
+            margin-bottom: 40px;
+        }
+        .chapter-title {
+            color: var(--accent-primary);
+            font-size: 20px;
+            border-left: 4px solid var(--accent-primary);
+            padding-left: 12px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .entry {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: background-color 0.3s;
+        }
+        .mod-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--mod-title-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .mod-title::before {
+            content: "■";
+            color: var(--accent-secondary);
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        .section {
+            margin-bottom: 10px;
+        }
+        .section-label {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .highlight {
+            color: #ff8a65;
+            font-weight: 600;
+        }
+        .code-block {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+        </label>
+    </div>
+
+    <div class="header">
+        <img src="atm10_logo.png" alt="ATM10 Logo" style="max-width: 150px; margin-bottom: 15px;">
+        <h1>ATM10 (All The Mods 10) 시스템 엔지니어링 가이드</h1>
+        <p>자동화 설계 표준 및 서버 충돌(Crash) 해결을 위한 공식 기술 문서</p>
+    </div>
+
+    <div class="chapter">
+        <div class="chapter-title">Chapter 1. Storage & Logistics (저장 및 물류 네트워크)</div>
+        
+        <div class="entry">
+            <div class="mod-title">Applied Energistics 2 (AE2)</div>
+            <div class="section">
+                <div class="section-label">Issue | 조합 시스템 무한 대기 현상</div>
+                대규모 자동 조합 진행 중, 특정 재료에서 연산이 정지하며 시스템이 무한 대기 상태에 빠지는 현상.
+            </div>
+            <div class="sectionG드ㅑㅜㅑ
+            ">
+                <div class="section-label">Solution | 대체품 허용 옵션 비활성화</div>
+                패턴 인코딩 터미널에서 조합법을 등록할 때, 우측의 <span class="highlight">대체품 허용 (Allow Substitutions)</span> 옵션을 반드시 비활성화(Off)해야 합니다. 해당 옵션 활성화 시 NBT 데이터 충돌로 인해 조합 CPU가 정지할 수 있습니다.
+            </div>
+            <div class="section">
+                <div class="section-label">Advanced | P2P Tunnel을 이용한 채널 관리</div>
+                ME 컨트롤러의 한 면에서 사용할 수 있는 채널은 32개로 제한됩니다. 대규모 네트워크 설계 시, <span class="highlight">P2P Tunnel - ME</span>를 사용하여 32채널을 1개의 채널로 압축하여 전송하는 아키텍처가 필수적입니다. 컨트롤러의 한 면을 P2P 입력 전용으로 할당하면, 케이블 하나로 수백 개의 채널을 원격지 서브 네트워크로 전송할 수 있습니다.
+            </div>
+             <div class="section">
+                <div class="section-label">Optimization | Storage Bus를 이용한 대용량 아이템 관리</div>
+                조약돌, 흙, 네더랙 등 대량으로 수급되는 아이템을 값비싼 ME 스토리지 셀에 저장하는 것은 비효율적입니다. <span class="highlight">Storage Bus</span>를 <span class="highlight">Storage Drawers</span>의 Drawer Controller에 연결하고, 스토리지 버스의 우선순위(Priority)를 ME 드라이브보다 높게 설정하여 대용량 아이템을 드로워 시스템에 우선적으로 보관하도록 설계합니다.
+            </div>
+        </div>
+
+        <div class="entry">
+            <div class="mod-title">Sophisticated Storage</div>
+            <div class="section">
+                <div class="section-label">Optimization | 실시간 블록 압축</div>
+                Mystical Agriculture 에센스 등 대량으로 생산되는 아이템은 AE2 연산을 거치지 않고, 인벤토리에 <span class="highlight">Advanced Compacting Upgrade</span>를 장착하여 전력 소모 없이 실시간으로 블록 압축을 수행하도록 설계합니다.
+            </div>
+        </div>
+    </div>
+  
+    <div class="chapter">
+        <div class="chapter-title">Chapter 2. Automation & Tech (자동화 및 기계 공학)</div>
+
+        <div class="entry">
+            <div class="mod-title">Super Factory Manager (SFM)</div>
+            <div class="section">
+                <div class="section-label">Application | 단일 인벤토리 기계 자동화</div>
+                Ars Nouveau의 아케인 제단(Arcane Pedestal) 등 1칸의 물리적 인벤토리 제한을 가진 기계의 자동화.
+            </div>
+            <div class="section">
+                <div class="section-label">Logic Design | 정밀한 아이템 분배 로직</div>
+                주변 제단들을 단일 그룹으로 묶은 뒤, SFM 노드에서 <span class="code-block">AMOUNT</span> 값을 설정하여 아이템을 분배합니다. 재료 부족으로 인한 시스템 정지를 방지하기 위해 반드시 <span class="highlight">조건문(Condition)</span>을 논리 회로에 추가하여 요구 수량이 100% 충족되었을 때만 투입되도록 제어해야 합니다.
+            </div>
+        </div>
+
+        <div class="entry">
+            <div class="mod-title">RFTools Utility (Crafter Tier 3)</div>
+            <div class="section">
+                <div class="section-label">Optimization | 고연산 조합 위임</div>
+                네더의 별 5x 압축 블록과 같은 고연산 아이템 제작 시, AE2 조합 CPU의 과부하를 방지하기 위해 RFTools 조합기에 연산을 위임합니다. 하위 압축 단계(1~4차)의 산출물 설정은 <span class="highlight">내부 인벤토리 유지(Int)</span>로 지정하여 외부 배출 없이 즉각적인 상위 압축이 이루어지도록 세팅합니다.
+            </div>
+        </div>
+    </div>
+
+    <div class="chapter">
+        <div class="chapter-title">Chapter 3. Spawners & Resources (스포너 및 자원 생산)</div>
+
+        <div class="entry">
+            <div class="mod-title">Apothic Spawners (Apotheosis)</div>
+            <div class="section">
+                <div class="section-label">Issue | 스포너 개체 수 제한 문제</div>
+                스켈레톤 등 원거리 AI를 가진 몹이 킬존(Kill Zone)으로 이동하지 않아 스포너의 개체 수 제한(Max Nearby Entities)에 걸려 스폰이 중단되는 현상.
+            </div>
+            <div class="section">
+                <div class="section-label">Solution | 조건 무시 및 강제 이송</div>
+                스포너에 <span class="highlight">가스트의 눈물</span>을 사용하여 최대 스폰 제한을 늘리고, <span class="highlight">드래곤의 알</span>을 사용하여 빛 밝기 등의 스폰 조건을 무시하도록 개조합니다. 물리적으로는 Mob Grinding Utils의 몹 선풍기(Mob Fan)를 활용해 강제 이송을 구현합니다.
+            </div>
+        </div>
+
+        <div class="entry">
+            <div class="mod-title">Productive Bees</div>
+            <div class="section">
+                <div class="section-label">Guide | 호박석(Amber) 융해 방법</div>
+                Amber Bee에 의해 몹이나 엔티티가 호박석(Amber)에 갇혔을 경우, 파괴 도구를 사용하지 않고 블록 하단에 <span class="highlight">모닥불(Campfire)</span>을 설치하여 안전하게 융해시킵니다. (생산물인 Amber Comb은 일반 콤브와 동일하게 원심분리기로 처리합니다.)
+            </div>
+        </div>
+    </div>
+
+    <div class="chapter">
+        <div class="chapter-title">Chapter 4. Building & Utility (건축 및 다목적 도구)</div>
+
+        <div class="entry">
+            <div class="mod-title">Building Gadgets 2 & FTB Ultimine</div>
+            <div class="section">
+                <div class="section-label">Warning | NBT 데이터 블록 스왑 주의</div>
+                기지 리모델링 시 Exchanging Gadget을 사용할 때, Soul Surge나 파이프 계열 등 내부 데이터(NBT)를 포함하는 타일 엔티티 블록은 데이터 증발 위험이 있어 스왑이 제한됩니다.
+            </div>
+            <div class="section">
+                <div class="section-label">Solution | 안전한 철거 및 재설치</div>
+                특수 블록 및 배관 시스템 교체 시에는 강제 스왑을 시도하지 않고, <span class="highlight">FTB Ultimine</span>의 광맥 채굴 기능을 사용하여 안전하게 일괄 철거한 후 재설치하는 표준 규격을 권장합니다.
+            </div>
+        </div>
+    </div>
+
+    <div class="chapter">
+        <div class="chapter-title">Chapter 5. Server Administration (서버 장애 대응)</div>
+
+        <div class="entry">
+            <div class="mod-title">MCA Selector 기반 크래시 복구 프로토콜</div>
+            <div class="section">
+                <div class="section-label">Issue | 타일 엔티티 데이터 처리 오류</div>
+                Ars Nouveau의 Wixie Cauldron 등 타일 엔티티 데이터 처리 오류로 인해 서버 기동 시 즉각적인 충돌(Crash)이 발생하는 치명적 오류.
+            </div>
+            <div class="section">
+                <div class="section-label">Solution | 에러 청크 강제 삭제</div>
+                에러 무시 컨피그(Config)가 작동하지 않는 하드 크래시의 경우, 자바 기반 외부 맵 에디터인 <span class="highlight">MCA Selector</span>를 운용합니다. 서버의 world 폴더를 로드한 뒤, 크래시 리포트에 명시된 좌표(Block Location)로 이동(Ctrl+G)하여 해당 에러 청크를 완전히 삭제(Delete)함으로써 서버를 정상화할 수 있습니다.
+            </div>
+        </div>
+    </div>
+
+    <div class="chapter">
+        <div class="chapter-title">Chapter 6. Server & Client Performance Optimization (서버 및 클라이언트 최적화)</div>
+        
+        <div class="entry">
+            <div class="mod-title">JVM (Java Virtual Machine) Arguments Optimization</div>
+            <div class="section">
+                <div class="section-label">Issue | 주기적인 렉 및 프레임 드랍</div>
+                대형 모드팩 실행 시 발생하는 주기적인 렉(Stutter) 및 프레임 드랍 현상.
+            </div>
+            <div class="section">
+                <div class="section-label">Solution | GC 최적화 및 RAM 할당</div>
+                기본 JVM 설정 대신, 최신 가비지 컬렉터(Garbage Collector)를 사용하도록 인자를 수정합니다. <span class="highlight">ShenandoahGC</span> 또는 <span class="highlight">ZGC</span> 사용을 권장하며, 최소 8GB에서 최대 12GB의 RAM을 할당하는 것이 안정적입니다. (<code class="code-block">-Xmx10G -XX:+UseShenandoahGC</code>) 시스템 메모리의 절반 이상을 할당하는 것은 오히려 시스템 불안정성을 초래할 수 있으니 피해야 합니다.
+            </div>
+        </div>
+
+        <div class="entry">
+            <div class="mod-title">In-Game Entity & Rendering Management</div>
+            <div class="section">
+                <div class="section-label">Optimization | 엔티티 및 렌더링 최적화</div>
+                서버 랙의 주범인 과도한 엔티티 생성을 제어해야 합니다. Mob Grinding Utils의 <span class="highlight">Dreadful Dirt</span>나 Apotheosis의 스포너를 사용할 경우, 생산된 몹이 즉시 처리되도록 <span class="highlight">Absorption Hopper</span>와 킬링 시스템을 구축해야 합니다. 또한, 클라이언트 측면에서는 비디오 설정에서 <span class="code-block">Render Distance</span>를 8~10청크로, <span class="code-block">Simulation Distance</span>를 5~6으로 줄이는 것이 체감 성능 향상에 가장 효과적입니다.
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        문서 버전: ATM10 v5.4 대응 | 최종 업데이트: 2026-03-24
+    </footer>
+</div>
+
+<script>
+    const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+    const currentTheme = localStorage.getItem('theme');
+
+    if (currentTheme) {
+        document.documentElement.setAttribute('data-theme', currentTheme);
+    
+        if (currentTheme === 'light') {
+            toggleSwitch.checked = true;
+        }
+    }
+
+    function switchTheme(e) {
+        if (e.target.checked) {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+        }
+        else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }    
+    }
+
+    toggleSwitch.addEventListener('change', switchTheme, false);
+</script>
+
+</body>
+</html>
